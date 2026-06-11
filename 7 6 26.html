@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EcoQuest · Rumiñahui</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g: #1db954; --gn: #39ff7a; --gd: #0a7a32;
+  --t: #c8773a; --b: #0d9ddb; --m: #9b5de5;
+  --bg: #050d08; --sf: #0f2016; --s2: #162b1c;
+  --br: rgba(29,185,84,0.18); --tx: #e8f5ec; --mu: #7aad85;
+  --rd: #ff4757;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--tx); overflow:hidden; }
+
+/* LAYOUT */
+.wrap { display:flex; justify-content:center; align-items:center; height:100vh; gap:1.5rem; padding:1rem; background:radial-gradient(ellipse at 60% 40%, #0b1a10, #050d08); }
+
+/* SIDEBAR */
+.side { display:flex; flex-direction:column; gap:.5rem; width:175px; flex-shrink:0; }
+.side-ttl { font-family:'Syne',sans-serif; font-size:.95rem; font-weight:800; color:var(--gn); }
+.side-sub { font-size:.65rem; color:var(--mu); line-height:1.4; margin-bottom:.3rem; }
+.sb { background:var(--sf); border:1px solid var(--br); border-radius:8px; padding:.5rem .8rem; font-size:.7rem; color:var(--mu); cursor:pointer; text-align:left; transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif; }
+.sb:hover, .sb.on { border-color:var(--g); color:var(--gn); background:rgba(29,185,84,.1); }
+.ibox { background:rgba(13,157,219,.07); border:1px solid rgba(13,157,219,.2); border-radius:8px; padding:.65rem; font-size:.63rem; color:rgba(13,157,219,.85); line-height:1.5; margin-top:.3rem; }
+
+/* PHONE */
+.phone { width:375px; height:780px; background:var(--bg); border-radius:44px; border:8px solid #1c1c1c; box-shadow:0 0 0 1px #2a2a2a, 0 40px 80px rgba(0,0,0,.9); position:relative; overflow:hidden; flex-shrink:0; }
+.notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:110px; height:30px; background:#1c1c1c; border-radius:0 0 20px 20px; z-index:100; }
+
+/* STATUS BAR */
+.sbar { position:absolute; top:0; left:0; right:0; height:46px; display:flex; justify-content:space-between; align-items:flex-end; padding:0 22px 7px; font-size:.66rem; font-weight:600; z-index:60; background:rgba(5,13,8,.8); backdrop-filter:blur(12px); }
+
+/* SCREENS */
+.scr { position:absolute; inset:0; display:none; flex-direction:column; }
+.scr.on { display:flex; }
+
+/* SCROLL BODY */
+.bod { flex:1; overflow-y:auto; padding-top:46px; padding-bottom:78px; }
+.bod::-webkit-scrollbar { display:none; }
+
+/* BOTTOM NAV */
+.bnav { position:absolute; bottom:0; left:0; right:0; height:78px; background:rgba(5,13,8,.96); backdrop-filter:blur(20px); border-top:1px solid var(--br); display:flex; justify-content:space-around; align-items:center; padding-bottom:10px; z-index:60; }
+.ni { display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; padding:4px 10px; border-radius:12px; transition:all .2s; min-width:50px; }
+.ni:hover, .ni.on { background:rgba(29,185,84,.12); }
+.ni-i { font-size:1.2rem; }
+.ni-l { font-size:.55rem; color:var(--mu); }
+.ni.on .ni-l { color:var(--gn); }
+
+/* TOAST */
+.toast { position:absolute; top:54px; left:14px; right:14px; background:var(--s2); border:1px solid var(--g); border-radius:12px; padding:9px 13px; display:flex; align-items:center; gap:9px; font-size:.74rem; z-index:300; transform:translateY(-90px); opacity:0; transition:transform .3s ease, opacity .3s ease; pointer-events:none; }
+.toast.on { transform:translateY(0); opacity:1; }
+.t-xp { color:var(--gn); font-weight:700; margin-left:auto; white-space:nowrap; }
+
+/* SHARED */
+.lbl { padding:0 18px 7px; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--t); }
+.card { background:var(--sf); border:1px solid var(--br); border-radius:14px; }
+.chip { display:inline-flex; align-items:center; gap:4px; background:rgba(57,255,122,.1); border:1px solid rgba(57,255,122,.25); color:var(--gn); font-size:.65rem; font-weight:600; padding:3px 10px; border-radius:2rem; }
+.btn-g { background:var(--gn); color:#050d08; border:none; border-radius:11px; padding:.6rem 1.2rem; font-size:.8rem; font-weight:700; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all .2s; }
+.btn-g:hover { transform:scale(1.03); box-shadow:0 6px 20px rgba(57,255,122,.3); }
+.btn-g:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* ═══ SPLASH ═══ */
+#s-splash { background:radial-gradient(ellipse at 50% 30%, #0a2a14, #050d08); justify-content:flex-start; align-items:center; overflow-y:auto; }
+.sp-wrap { display:flex; flex-direction:column; align-items:center; padding:68px 26px 28px; width:100%; }
+.sp-logo { font-family:'Syne',sans-serif; font-size:3.2rem; font-weight:800; line-height:1; text-align:center; }
+.sp-eco { color:var(--gn); }
+.sp-q { color:var(--t); }
+.sp-tag { font-size:.6rem; letter-spacing:.2em; color:var(--mu); text-transform:uppercase; margin-top:3px; }
+.sp-bird { font-size:4.5rem; display:block; text-align:center; margin:1.2rem 0; animation:bird 3s ease-in-out infinite; }
+@keyframes bird { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.sp-sub { font-size:.78rem; color:var(--mu); line-height:1.65; text-align:center; margin-bottom:1.6rem; }
+.g-btn { display:flex; align-items:center; justify-content:center; gap:.7rem; background:#fff; color:#1f1f1f; border:none; border-radius:12px; padding:.82rem 1.2rem; font-size:.84rem; font-weight:600; cursor:pointer; width:100%; font-family:'Plus Jakarta Sans',sans-serif; box-shadow:0 2px 10px rgba(0,0,0,.4); transition:all .2s; }
+.g-btn:hover { transform:translateY(-1px); box-shadow:0 4px 18px rgba(0,0,0,.5); }
+.div-row { display:flex; align-items:center; gap:.8rem; width:100%; margin:.75rem 0; color:var(--mu); font-size:.68rem; }
+.div-row::before, .div-row::after { content:''; flex:1; height:1px; background:var(--br); }
+.demo-btn { background:rgba(29,185,84,.1); color:var(--gn); border:1px solid rgba(29,185,84,.3); border-radius:12px; padding:.72rem; font-size:.8rem; cursor:pointer; width:100%; font-family:'Plus Jakarta Sans',sans-serif; transition:all .2s; }
+.demo-btn:hover { background:rgba(29,185,84,.18); border-color:var(--g); }
+.sp-note { font-size:.58rem; color:rgba(122,173,133,.32); text-align:center; margin-top:.9rem; line-height:1.5; }
+
+/* ═══ HOME ═══ */
+.h-hdr { padding:12px 18px 8px; display:flex; justify-content:space-between; align-items:center; }
+.h-gr { font-size:.66rem; color:var(--mu); }
+.h-nm { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; }
+.h-av { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--g),var(--b)); display:flex; align-items:center; justify-content:center; font-size:1rem; border:2px solid var(--gn); cursor:pointer; overflow:hidden; flex-shrink:0; }
+.h-av img { width:100%; height:100%; object-fit:cover; }
+
+.xp-card { margin:0 14px 12px; padding:11px 13px; }
+.xp-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.xp-lv { font-family:'Syne',sans-serif; font-size:.76rem; font-weight:700; color:var(--gn); }
+.xp-pt { font-size:.63rem; color:var(--mu); }
+.xp-tr { height:6px; background:rgba(255,255,255,.05); border-radius:3px; overflow:hidden; }
+.xp-fill { height:100%; background:linear-gradient(90deg,var(--gd),var(--gn)); border-radius:3px; width:0%; transition:width 1.2s ease; }
+.xp-hn { font-size:.6rem; color:var(--mu); margin-top:4px; }
+
+.reto { margin:0 14px 12px; padding:13px; background:linear-gradient(135deg,#092510,#0c160c); border:1px solid var(--g); border-radius:14px; position:relative; overflow:hidden; }
+.reto::after { content:''; position:absolute; top:-30px; right:-30px; width:90px; height:90px; background:rgba(57,255,122,.05); border-radius:50%; }
+.reto-tag { font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gn); margin-bottom:5px; }
+.reto-ttl { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:700; margin-bottom:3px; }
+.reto-dsc { font-size:.72rem; color:var(--mu); line-height:1.5; margin-bottom:9px; }
+.reto-xp { position:absolute; bottom:11px; right:13px; font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; color:var(--gn); opacity:.3; }
+
+.sg { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding:0 14px 12px; }
+.sc { background:var(--sf); border:1px solid var(--br); border-radius:12px; padding:9px 7px; text-align:center; }
+.si { font-size:1.2rem; display:block; margin-bottom:2px; }
+.sn { font-family:'Syne',sans-serif; font-size:.95rem; font-weight:800; color:var(--gn); display:block; }
+.sl { font-size:.56rem; color:var(--mu); }
+
+.qg { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; padding:0 14px 12px; }
+.qc { background:var(--sf); border:1px solid var(--br); border-radius:12px; padding:11px; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; gap:4px; }
+.qc:hover { border-color:var(--g); transform:translateY(-2px); }
+.qi { font-size:1.4rem; }
+.qn { font-size:.75rem; font-weight:600; }
+.qx { font-size:.6rem; color:var(--gn); }
+
+.alt { margin:0 14px 12px; background:rgba(13,157,219,.07); border:1px solid rgba(13,157,219,.2); border-radius:11px; padding:9px 12px; }
+.alt-t { font-size:.7rem; color:var(--b); font-weight:600; }
+.alt-s { font-size:.63rem; color:var(--mu); margin-top:2px; }
+
+/* ═══ SCANNER ═══ */
+#s-scanner { background:#000; flex-direction:column; }
+
+.cam-wrap { position:relative; width:100%; height:280px; background:#000; flex-shrink:0; overflow:hidden; }
+#cam-vid { width:100%; height:100%; object-fit:cover; display:block; }
+#cam-cvs { display:none; }
+
+.cam-off { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#000; gap:.6rem; text-align:center; padding:0 2rem; }
+.cam-off-ico { font-size:2.5rem; }
+.cam-off-txt { font-size:.7rem; color:var(--mu); line-height:1.5; }
+
+.cam-ov { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+.sf { width:170px; height:170px; position:relative; }
+.sf::before, .sf::after, .sf .c::before, .sf .c::after { content:''; position:absolute; width:26px; height:26px; border-color:var(--gn); border-style:solid; }
+.sf::before { top:0; left:0; border-width:3px 0 0 3px; }
+.sf::after  { top:0; right:0; border-width:3px 3px 0 0; }
+.sf .c::before { bottom:0; left:0; border-width:0 0 3px 3px; }
+.sf .c::after  { bottom:0; right:0; border-width:0 3px 3px 0; }
+.sl-anim { position:absolute; left:6px; right:6px; height:2px; background:linear-gradient(90deg,transparent,var(--gn),transparent); animation:scananim 2s linear infinite; }
+@keyframes scananim { 0%{top:6px;opacity:1} 88%{top:164px;opacity:1} 100%{top:6px;opacity:0} }
+
+.cam-ctrl { position:absolute; bottom:8px; left:0; right:0; display:flex; justify-content:center; gap:8px; }
+.cc { background:rgba(5,13,8,.82); border:1px solid var(--br); border-radius:9px; padding:5px 12px; font-size:.66rem; color:var(--tx); cursor:pointer; backdrop-filter:blur(10px); transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif; }
+.cc:hover { border-color:var(--g); color:var(--gn); }
+.cc.pr { background:rgba(57,255,122,.18); border-color:var(--gn); color:var(--gn); font-weight:700; }
+.cc:disabled { opacity:.4; cursor:not-allowed; }
+
+.scan-bod { flex:1; overflow-y:auto; padding:10px 14px 78px; background:var(--bg); }
+.scan-bod::-webkit-scrollbar { display:none; }
+.sc-ttl { font-family:'Syne',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:2px; }
+.sc-hn  { font-size:.67rem; color:var(--mu); line-height:1.5; margin-bottom:10px; }
+
+.ai-st { background:var(--sf); border:1px solid var(--br); border-radius:11px; padding:10px 13px; margin-bottom:9px; display:flex; align-items:center; gap:9px; font-size:.7rem; }
+.ai-dot { width:7px; height:7px; border-radius:50%; background:var(--mu); flex-shrink:0; }
+.ai-dot.rdy { background:var(--gn); animation:pd .9s ease-in-out infinite; }
+.ai-dot.bsy { background:var(--b); animation:pd .35s ease-in-out infinite; }
+@keyframes pd { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+.ai-box { background:var(--sf); border:1px solid var(--g); border-radius:13px; padding:13px; margin-bottom:10px; display:none; }
+.ai-box.on { display:block; animation:sup .3s ease; }
+@keyframes sup { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.ai-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.ai-tg { font-size:.58rem; color:var(--gn); letter-spacing:.1em; text-transform:uppercase; }
+.ai-cf { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:800; color:var(--gn); }
+.ai-nm { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:2px; }
+.ai-in { font-size:.7rem; color:var(--mu); margin-bottom:9px; line-height:1.5; }
+
+.dm-ttl { font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:var(--mu); margin-bottom:7px; }
+.dm-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.db { background:var(--sf); border:2px solid var(--br); border-radius:10px; padding:7px 4px; text-align:center; cursor:pointer; transition:all .2s; }
+.db:hover, .db.sel { border-color:var(--gn); background:rgba(57,255,122,.07); }
+.di { font-size:1.3rem; display:block; margin-bottom:2px; }
+.dn { font-size:.58rem; color:var(--mu); }
+.dc { font-size:.52rem; font-weight:700; margin-top:1px; }
+
+/* ═══ MURO ═══ */
+.m-hd { padding:12px 18px 8px; }
+.m-ttl { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; }
+.m-sub { font-size:.66rem; color:var(--mu); }
+
+.m-inp-row { margin:0 14px 10px; display:flex; gap:7px; align-items:center; }
+.m-inp { flex:1; background:var(--sf); border:1px solid var(--br); border-radius:11px; padding:8px 11px; color:var(--tx); font-family:'Plus Jakarta Sans',sans-serif; font-size:.75rem; outline:none; }
+.m-inp:focus { border-color:var(--g); }
+.m-send { background:var(--gn); color:#050d08; border:none; border-radius:10px; width:32px; height:32px; font-size:.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+.post { margin:0 14px 9px; background:var(--sf); border:1px solid var(--br); border-radius:13px; padding:11px; transition:border-color .2s; }
+.post:hover { border-color:var(--g); }
+.p-ur { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.p-av { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.85rem; border:2px solid; flex-shrink:0; overflow:hidden; }
+.p-av img { width:100%; height:100%; object-fit:cover; }
+.p-nm { font-size:.78rem; font-weight:600; }
+.p-cs { font-size:.6rem; color:var(--mu); }
+.p-tm { font-size:.6rem; color:var(--mu); margin-left:auto; }
+.p-img { width:100%; border-radius:8px; height:85px; display:flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:8px; background:linear-gradient(135deg,#092510,#0c160c); }
+.p-tx { font-size:.75rem; color:var(--tx); line-height:1.5; margin-bottom:8px; }
+.p-ac { display:flex; gap:8px; align-items:center; }
+.p-btn { display:flex; align-items:center; gap:3px; background:none; border:none; color:var(--mu); font-size:.68rem; cursor:pointer; padding:3px 6px; border-radius:6px; transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif; }
+.p-btn:hover, .p-btn.lk { color:var(--gn); background:rgba(57,255,122,.08); }
+.p-xp { margin-left:auto; background:rgba(57,255,122,.08); border:1px solid rgba(57,255,122,.18); color:var(--gn); font-size:.6rem; font-weight:700; padding:2px 7px; border-radius:2rem; }
+
+/* ═══ RANKING ═══ */
+.r-hd { padding:12px 18px 8px; }
+.r-ttl { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; }
+.r-pd { font-size:.66rem; color:var(--mu); }
+
+.podium { display:flex; align-items:flex-end; justify-content:center; gap:7px; padding:6px 18px 12px; }
+.pod { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+.pod-nm { font-size:.6rem; font-weight:600; text-align:center; line-height:1.3; }
+.pod-pt { font-family:'Syne',sans-serif; font-size:.65rem; font-weight:700; }
+.pod-bl { width:100%; border-radius:7px 7px 0 0; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+.p1 .pod-bl { height:70px; background:rgba(240,192,64,.12); border:1px solid #f0c040; }
+.p2 .pod-bl { height:52px; background:rgba(192,192,192,.12); border:1px solid #b0b0b0; }
+.p3 .pod-bl { height:40px; background:rgba(200,119,58,.12); border:1px solid var(--t); }
+.p1 .pod-pt { color:#f0c040; } .p2 .pod-pt { color:#b0b0b0; } .p3 .pod-pt { color:var(--t); }
+
+.r-list { padding:0 14px; }
+.r-row { display:flex; align-items:center; gap:9px; background:var(--sf); border:1px solid var(--br); border-radius:11px; padding:9px 11px; margin-bottom:6px; transition:all .2s; }
+.r-row:hover, .r-row.mine { border-color:var(--gn); }
+.r-row.mine { background:rgba(57,255,122,.03); }
+.r-pos { font-family:'Syne',sans-serif; font-size:.9rem; font-weight:800; width:24px; text-align:center; }
+.r-inf { flex:1; }
+.r-nm { font-size:.78rem; font-weight:600; }
+.r-bar { height:3px; background:rgba(255,255,255,.05); border-radius:2px; margin-top:4px; overflow:hidden; }
+.r-bar-f { height:100%; background:linear-gradient(90deg,var(--gd),var(--gn)); border-radius:2px; }
+.r-pc { text-align:right; }
+.r-pts { font-family:'Syne',sans-serif; font-size:.82rem; font-weight:800; color:var(--gn); display:block; }
+.r-dt { font-size:.58rem; color:var(--g); }
+
+/* ═══ PERFIL ═══ */
+.pf-hd { text-align:center; padding:16px 18px 12px; }
+.pf-av { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--g),var(--b)); display:flex; align-items:center; justify-content:center; font-size:1.7rem; border:3px solid var(--gn); margin:0 auto 8px; overflow:hidden; }
+.pf-av img { width:100%; height:100%; object-fit:cover; }
+.pf-nm { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; }
+.pf-em { font-size:.63rem; color:var(--mu); margin-top:2px; }
+.pf-lv { display:inline-flex; align-items:center; gap:4px; background:rgba(57,255,122,.09); border:1px solid rgba(57,255,122,.22); color:var(--gn); font-size:.67rem; padding:3px 10px; border-radius:2rem; margin-top:6px; }
+
+.pf-st { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; padding:0 14px 12px; }
+.ps { background:var(--sf); border:1px solid var(--br); border-radius:11px; padding:9px; text-align:center; }
+.ps-n { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; color:var(--gn); display:block; }
+.ps-l { font-size:.58rem; color:var(--mu); }
+
+.bg-sec { padding:0 14px 12px; }
+.bg-ttl { font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--t); margin-bottom:7px; }
+.bg-row { display:flex; flex-wrap:wrap; gap:6px; }
+.bc { background:var(--s2); border:1px solid var(--br); border-radius:9px; padding:6px 8px; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:55px; cursor:pointer; transition:all .2s; }
+.bc:hover { border-color:var(--g); }
+.be { font-size:1.2rem; }
+.bl { font-size:.53rem; color:var(--mu); text-align:center; }
+.bc.lk { opacity:.28; filter:grayscale(1); }
+
+.im-sec { padding:0 14px 12px; }
+.im-ttl { font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--t); margin-bottom:7px; }
+.im-row { background:var(--sf); border:1px solid var(--br); border-radius:11px; padding:9px 11px; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.im-v { font-family:'Syne',sans-serif; font-size:.88rem; font-weight:700; color:var(--gn); }
+.im-l { font-size:.63rem; color:var(--mu); }
+
+.out-btn { margin:0 14px 14px; width:calc(100% - 28px); background:transparent; border:1px solid rgba(255,71,87,.25); color:rgba(255,71,87,.65); border-radius:11px; padding:.63rem; font-size:.74rem; cursor:pointer; transition:all .2s; font-family:'Plus Jakarta Sans',sans-serif; }
+.out-btn:hover { border-color:var(--rd); color:var(--rd); }
+
+/* RESPONSIVE */
+@media(max-width:680px){
+  .wrap { flex-direction:column; overflow-y:auto; padding:.5rem; }
+  .side { width:100%; flex-direction:row; flex-wrap:wrap; justify-content:center; gap:.35rem; }
+  .sb { font-size:.63rem; padding:.42rem .7rem; }
+  .ibox { display:none; }
+  .phone { width:100%; max-width:390px; height:720px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- SIDEBAR -->
+<div class="side">
+  <div class="side-ttl">EcoQuest 🌿</div>
+  <div class="side-sub">Prototipo · U.E. Rumiñahui</div>
+  <button class="sb on" id="sb-splash"  onclick="go('splash')">🚀 Login</button>
+  <button class="sb"    id="sb-home"    onclick="go('home')">🏠 Home</button>
+  <button class="sb"    id="sb-scanner" onclick="go('scanner')">📸 Escáner IA</button>
+  <button class="sb"    id="sb-muro"    onclick="go('muro')">📋 Muro</button>
+  <button class="sb"    id="sb-ranking" onclick="go('ranking')">🏆 Ranking</button>
+  <button class="sb"    id="sb-perfil"  onclick="go('perfil')">👤 Perfil</button>
+  <div class="ibox">
+    📸 <strong>Cámara real:</strong> Toca "Activar Cámara" en el escáner. Requiere HTTPS.<br><br>
+    🦅 <strong>Login:</strong> Ingresa tu nombre, curso e institución para comenzar.
+  </div>
+</div>
+
+<!-- PHONE -->
+<div class="phone">
+  <div class="notch"></div>
+  <div class="sbar">
+    <span id="clock">9:41</span>
+    <div style="display:flex;gap:5px;align-items:center;font-size:.58rem;">●●● WiFi 🔋</div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span id="t-i">⚡</span>
+    <span id="t-m">Acción completada</span>
+    <span class="t-xp" id="t-x">+50 XP</span>
+  </div>
+
+  <!-- ═══════════ SPLASH ═══════════ -->
+  <div class="scr on" id="s-splash">
+    <div class="sp-wrap">
+      <div class="sp-logo"><span class="sp-eco">Eco</span><span class="sp-q">Quest</span></div>
+      <div class="sp-tag">Rumi · Edición Verde</div>
+      <span class="sp-bird">🦅</span>
+      <p class="sp-sub">Transforma tu escuela.<br>Salva tu planeta.<br>Gana XP en el mundo real.</p>
+
+      <!-- Formulario de ingreso -->
+      <div style="width:100%;display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.2rem">
+
+        <div style="display:flex;flex-direction:column;gap:.3rem">
+          <label style="font-size:.62rem;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;padding-left:2px">Tu nombre completo</label>
+          <input id="inp-nombre" type="text" placeholder="Ej: María Salazar"
+            maxlength="60" autocomplete="name"
+            style="background:rgba(29,185,84,.06);border:1px solid rgba(29,185,84,.25);
+              border-radius:11px;padding:.72rem 1rem;font-size:.84rem;color:var(--tx);
+              font-family:'Plus Jakarta Sans',sans-serif;outline:none;
+              transition:border-color .2s,background .2s;width:100%"
+            onfocus="this.style.borderColor='var(--gn)';this.style.background='rgba(29,185,84,.1)'"
+            onblur="this.style.borderColor='rgba(29,185,84,.25)';this.style.background='rgba(29,185,84,.06)'"
+            oninput="checkForm()">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.3rem">
+          <label style="font-size:.62rem;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;padding-left:2px">Curso</label>
+          <select id="inp-curso"
+            style="background:rgba(29,185,84,.06);border:1px solid rgba(29,185,84,.25);
+              border-radius:11px;padding:.72rem 1rem;font-size:.84rem;color:var(--tx);
+              font-family:'Plus Jakarta Sans',sans-serif;outline:none;
+              transition:border-color .2s;width:100%;cursor:pointer;
+              -webkit-appearance:none;appearance:none"
+            onfocus="this.style.borderColor='var(--gn)'"
+            onblur="this.style.borderColor='rgba(29,185,84,.25)'"
+            onchange="checkForm()">
+            <option value="" style="background:#050d08">Selecciona tu curso…</option>
+            <optgroup label="Educación General Básica" style="background:#050d08">
+              <option value="8vo EGB A" style="background:#050d08">8vo EGB A</option>
+              <option value="8vo EGB B" style="background:#050d08">8vo EGB B</option>
+              <option value="9no EGB A" style="background:#050d08">9no EGB A</option>
+              <option value="9no EGB B" style="background:#050d08">9no EGB B</option>
+              <option value="10mo EGB A" style="background:#050d08">10mo EGB A</option>
+              <option value="10mo EGB B" style="background:#050d08">10mo EGB B</option>
+            </optgroup>
+            <optgroup label="Bachillerato General Unificado" style="background:#050d08">
+              <option value="1ro BGU A" style="background:#050d08">1ro BGU A</option>
+              <option value="1ro BGU B" style="background:#050d08">1ro BGU B</option>
+              <option value="2do BGU A" style="background:#050d08">2do BGU A</option>
+              <option value="2do BGU B" style="background:#050d08">2do BGU B</option>
+              <option value="3ro BGU A" style="background:#050d08">3ro BGU A</option>
+              <option value="3ro BGU B" style="background:#050d08">3ro BGU B</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:.3rem">
+          <label style="font-size:.62rem;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;padding-left:2px">Institución educativa</label>
+          <input id="inp-inst" type="text" placeholder="U.E. Rumiñahui"
+            maxlength="80" autocomplete="organization"
+            style="background:rgba(29,185,84,.06);border:1px solid rgba(29,185,84,.25);
+              border-radius:11px;padding:.72rem 1rem;font-size:.84rem;color:var(--tx);
+              font-family:'Plus Jakarta Sans',sans-serif;outline:none;
+              transition:border-color .2s,background .2s;width:100%"
+            onfocus="this.style.borderColor='var(--gn)';this.style.background='rgba(29,185,84,.1)'"
+            onblur="this.style.borderColor='rgba(29,185,84,.25)';this.style.background='rgba(29,185,84,.06)'"
+            oninput="checkForm()">
+        </div>
+
+        <!-- Error msg -->
+        <div id="form-err" style="font-size:.65rem;color:#ff4757;display:none;
+          padding:.4rem .8rem;background:rgba(255,71,87,.08);border-radius:8px;
+          border:1px solid rgba(255,71,87,.25)"></div>
+
+        <button id="btn-ingresar" class="btn-g" onclick="formLogin()" disabled
+          style="width:100%;padding:.82rem;font-size:.88rem;margin-top:.2rem;opacity:.45">
+          🦅 Ingresar a EcoQuest
+        </button>
+      </div>
+
+      <p class="sp-note">U.E. Rumiñahui · Ambato, Ecuador<br>Tu información se guarda solo en este dispositivo</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ HOME ═══════════ -->
+  <div class="scr" id="s-home">
+    <div class="bod">
+      <div class="h-hdr">
+        <div>
+          <div class="h-gr" id="h-gr">Buenos días 🌿</div>
+          <div class="h-nm" id="h-nm">Cargando...</div>
+        </div>
+        <div class="h-av" id="h-av" onclick="go('perfil')">🦅</div>
+      </div>
+
+      <div class="card xp-card">
+        <div class="xp-top">
+          <span class="xp-lv">🌱 Nivel 2 · Brote</span>
+          <span class="xp-pt" id="xp-lb">820 / 1.500 XP</span>
+        </div>
+        <div class="xp-tr"><div class="xp-fill" id="xp-fill"></div></div>
+        <div class="xp-hn">Próximo: 🌳 Guardián · 680 XP restantes</div>
+      </div>
+
+      <div class="lbl">🔥 Reto del Día</div>
+      <div class="reto">
+        <div class="reto-tag">⚡ Activo ahora</div>
+        <div class="reto-ttl">Clasificación Inteligente</div>
+        <div class="reto-dsc">Usa el escáner IA para clasificar 3 residuos en el comedor. ¡La cámara lo hace por ti!</div>
+        <button class="btn-g" onclick="go('scanner')">Abrir Escáner 📸</button>
+        <div class="reto-xp">+150 XP</div>
+      </div>
+
+      <div class="lbl">📊 Impacto Hoy</div>
+      <div class="sg">
+        <div class="sc"><span class="si">♻️</span><span class="sn" id="s-rec">12</span><span class="sl">Reciclados</span></div>
+        <div class="sc"><span class="si">🌳</span><span class="sn">3</span><span class="sl">Árboles</span></div>
+        <div class="sc"><span class="si">💡</span><span class="sn">5kWh</span><span class="sl">Ahorrados</span></div>
+      </div>
+
+      <div class="lbl">⚡ Acciones Rápidas</div>
+      <div class="qg">
+        <div class="qc" onclick="go('scanner')"><span class="qi">📸</span><span class="qn">Escanear Residuo</span><span class="qx">+50 XP por objeto</span></div>
+        <div class="qc" onclick="go('muro')"><span class="qi">📋</span><span class="qn">Muro Proyectos</span><span class="qx">+15 XP al publicar</span></div>
+        <div class="qc" onclick="showToast('🌳 Árbol registrado en AR','¡+200 XP!','🌳')"><span class="qi">🌳</span><span class="qn">Ver Árbol AR</span><span class="qx">+20 XP mensual</span></div>
+        <div class="qc" onclick="go('ranking')"><span class="qi">🏆</span><span class="qn">Ver Ranking</span><span class="qx">Tu curso: #1 🥇</span></div>
+      </div>
+
+      <div class="alt">
+        <div class="alt-t">🔔 ¡Tu curso lidera el ranking!</div>
+        <div class="alt-s">3° Bach. "A" · 4.820 XP esta semana 🥇</div>
+      </div>
+    </div>
+    <div class="bnav">
+      <div class="ni on" onclick="go('home')"><span class="ni-i">🏠</span><span class="ni-l">Inicio</span></div>
+      <div class="ni"    onclick="go('scanner')"><span class="ni-i">📸</span><span class="ni-l">Escanear</span></div>
+      <div class="ni"    onclick="go('muro')"><span class="ni-i">📋</span><span class="ni-l">Muro</span></div>
+      <div class="ni"    onclick="go('ranking')"><span class="ni-i">🏆</span><span class="ni-l">Ranking</span></div>
+      <div class="ni"    onclick="go('perfil')"><span class="ni-i">👤</span><span class="ni-l">Perfil</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCANNER ═══════════ -->
+  <div class="scr" id="s-scanner">
+    <div class="cam-wrap">
+      <video id="cam-vid" autoplay playsinline muted></video>
+      <canvas id="cam-cvs"></canvas>
+
+      <!-- Camera OFF -->
+      <div class="cam-off" id="cam-off">
+        <span class="cam-off-ico">📸</span>
+        <p class="cam-off-txt" id="cam-off-txt">Activa la cámara para escanear residuos con IA en tiempo real</p>
+        <button class="btn-g" style="margin-top:.4rem;" onclick="startCam()">Activar Cámara</button>
+      </div>
+
+      <!-- Scan overlay (visible when cam ON) -->
+      <div class="cam-ov" id="cam-ov" style="display:none;">
+        <div class="sf"><div class="c"></div><div class="sl-anim"></div></div>
+      </div>
+
+      <!-- Controls (visible when cam ON) -->
+      <div class="cam-ctrl" id="cam-ctrl" style="display:none;">
+        <button class="cc" onclick="flipCam()">🔄</button>
+        <button class="cc pr" id="an-btn" onclick="analyzeFrame()">⚡ Analizar con IA</button>
+        <button class="cc" onclick="stopCam(true)">✕</button>
+      </div>
+    </div>
+
+    <div class="scan-bod">
+      <div class="sc-ttl">🤖 Escáner IA de Residuos</div>
+      <div class="sc-hn">Activa la cámara y apunta a un residuo, luego toca "Analizar". O usa el demo abajo.</div>
+
+      <div class="ai-st">
+        <div class="ai-dot" id="ai-dot"></div>
+        <span id="ai-st-txt">Listo · Activa la cámara o toca un objeto demo</span>
+      </div>
+
+      <div class="ai-box" id="ai-box">
+        <div class="ai-hd">
+          <span class="ai-tg">🤖 IA identificó</span>
+          <span class="ai-cf" id="ai-cf">—</span>
+        </div>
+        <div class="ai-nm" id="ai-nm">—</div>
+        <div class="ai-in" id="ai-in">—</div>
+        <span class="chip" id="ai-xp">⚡ +0 XP</span>
+      </div>
+
+      <div class="dm-ttl">⚡ Demo sin cámara · Toca para simular la IA:</div>
+      <div class="dm-grid">
+        <div class="db sel" onclick="demoScan(this,'Botella PET','Plástico','♻️ Contenedor Azul · Vacía antes de reciclar','#0d9ddb',50)">
+          <span class="di">🍾</span><div class="dn">Botella</div><div class="dc" style="color:#0d9ddb;">Azul</div>
+        </div>
+        <div class="db" onclick="demoScan(this,'Resto Orgánico','Orgánico','🟤 Contenedor Café · Para compostaje','#c8773a',50)">
+          <span class="di">🍎</span><div class="dn">Orgánico</div><div class="dc" style="color:#c8773a;">Café</div>
+        </div>
+        <div class="db" onclick="demoScan(this,'Papel / Cartón','Papel','♻️ Contenedor Gris · Debe estar seco','#999',50)">
+          <span class="di">📰</span><div class="dn">Papel</div><div class="dc" style="color:#999;">Gris</div>
+        </div>
+        <div class="db" onclick="demoScan(this,'Batería','Peligroso','⚠️ Punto Rojo Especial · ¡No tirar a la basura!','#ff4757',80)">
+          <span class="di">🔋</span><div class="dn">Batería</div><div class="dc" style="color:#ff4757;">Rojo</div>
+        </div>
+        <div class="db" onclick="demoScan(this,'Vidrio','Vidrio','🟢 Contenedor Verde · Sin tapas metálicas','#1db954',50)">
+          <span class="di">🍺</span><div class="dn">Vidrio</div><div class="dc" style="color:#1db954;">Verde</div>
+        </div>
+        <div class="db" onclick="demoScan(this,'Electrónico','RAEE','⚠️ Centro RAEE · Nunca en basura común','#9b5de5',100)">
+          <span class="di">📱</span><div class="dn">RAEE</div><div class="dc" style="color:#9b5de5;">Morado</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bnav">
+      <div class="ni"    onclick="go('home')"><span class="ni-i">🏠</span><span class="ni-l">Inicio</span></div>
+      <div class="ni on" onclick="go('scanner')"><span class="ni-i">📸</span><span class="ni-l">Escanear</span></div>
+      <div class="ni"    onclick="go('muro')"><span class="ni-i">📋</span><span class="ni-l">Muro</span></div>
+      <div class="ni"    onclick="go('ranking')"><span class="ni-i">🏆</span><span class="ni-l">Ranking</span></div>
+      <div class="ni"    onclick="go('perfil')"><span class="ni-i">👤</span><span class="ni-l">Perfil</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ MURO ═══════════ -->
+  <div class="scr" id="s-muro">
+    <div class="bod">
+      <div class="m-hd">
+        <div class="m-ttl">Muro de Proyectos 📋</div>
+        <div class="m-sub">Iniciativas ambientales del plantel</div>
+      </div>
+      <div class="m-inp-row">
+        <input class="m-inp" id="m-inp" placeholder="Comparte tu acción ambiental...">
+        <button class="m-send" onclick="addPost()">➤</button>
+      </div>
+      <div id="posts">
+        <div class="post">
+          <div class="p-ur">
+            <div class="p-av" style="background:linear-gradient(135deg,#1db954,#0d9ddb);border-color:#1db954;">🌱</div>
+            <div><div class="p-nm">Valentina R.</div><div class="p-cs">3° Bach. "A"</div></div>
+            <span class="p-tm">hace 2h</span>
+          </div>
+          <div class="p-img">🌳</div>
+          <div class="p-tx">¡Mi árbol ya tiene 40 cm! Lleva 2 meses y capturó 0.8 kg de CO₂. La AR lo muestra en el patio 🦅 #EcoQuest</div>
+          <div class="p-ac">
+            <button class="p-btn" onclick="likePost(this)">🌿 <span>24</span></button>
+            <button class="p-btn">💬 <span>8</span></button>
+            <span class="p-xp">✅ Validado · +35 XP</span>
+          </div>
+        </div>
+        <div class="post">
+          <div class="p-ur">
+            <div class="p-av" style="background:linear-gradient(135deg,#c8773a,#f0c040);border-color:#c8773a;">♻️</div>
+            <div><div class="p-nm">Carlos M.</div><div class="p-cs">2° Bach. "B"</div></div>
+            <span class="p-tm">hace 4h</span>
+          </div>
+          <div class="p-tx">Jardín vertical 201: 21/30 plantas ✅ ¡Al 70%! 💪 #JardínRumi</div>
+          <div class="p-ac">
+            <button class="p-btn lk">🌿 <span>41</span></button>
+            <button class="p-btn">💬 <span>12</span></button>
+            <span class="p-xp">✅ Validado · +50 XP</span>
+          </div>
+        </div>
+        <div class="post">
+          <div class="p-ur">
+            <div class="p-av" style="background:linear-gradient(135deg,#0d9ddb,#9b5de5);border-color:#0d9ddb;">💧</div>
+            <div><div class="p-nm">Equipo Agua</div><div class="p-cs">1° Bach. "A" · Proyecto</div></div>
+            <span class="p-tm">hace 1d</span>
+          </div>
+          <div class="p-tx">0 grifos con fuga hoy ✅ Ahorro mensual: 2.400 litros 💧🏆</div>
+          <div class="p-ac">
+            <button class="p-btn" onclick="likePost(this)">🌿 <span>67</span></button>
+            <button class="p-btn">💬 <span>5</span></button>
+            <span class="p-xp">⭐ Destacado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bnav">
+      <div class="ni"    onclick="go('home')"><span class="ni-i">🏠</span><span class="ni-l">Inicio</span></div>
+      <div class="ni"    onclick="go('scanner')"><span class="ni-i">📸</span><span class="ni-l">Escanear</span></div>
+      <div class="ni on" onclick="go('muro')"><span class="ni-i">📋</span><span class="ni-l">Muro</span></div>
+      <div class="ni"    onclick="go('ranking')"><span class="ni-i">🏆</span><span class="ni-l">Ranking</span></div>
+      <div class="ni"    onclick="go('perfil')"><span class="ni-i">👤</span><span class="ni-l">Perfil</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RANKING ═══════════ -->
+  <div class="scr" id="s-ranking">
+    <div class="bod">
+      <div class="r-hd">
+        <div class="r-ttl">🏆 Ranking de Cursos</div>
+        <div class="r-pd">Semana 21–27 de Abril</div>
+      </div>
+      <div class="podium">
+        <div class="pod p2"><div class="pod-nm">2° Bach. "B"</div><div class="pod-pt">4.150 XP</div><div class="pod-bl">🥈</div></div>
+        <div class="pod p1"><div class="pod-nm" style="color:#f0c040;">3° Bach. "A"</div><div class="pod-pt">4.820 XP</div><div class="pod-bl">🥇</div></div>
+        <div class="pod p3"><div class="pod-nm">1° Bach. "A"</div><div class="pod-pt">3.900 XP</div><div class="pod-bl">🥉</div></div>
+      </div>
+      <div class="r-list">
+        <div class="r-row mine">
+          <span class="r-pos" style="color:#f0c040;">1°</span>
+          <span style="font-size:1rem;">🌟</span>
+          <div class="r-inf">
+            <div class="r-nm">3° Bach. "A" <span style="font-size:.55rem;color:var(--gn);">← Tu curso</span></div>
+            <div class="r-bar"><div class="r-bar-f" style="width:100%"></div></div>
+          </div>
+          <div class="r-pc"><span class="r-pts">4.820</span><span class="r-dt">↑ +320 hoy</span></div>
+        </div>
+        <div class="r-row">
+          <span class="r-pos" style="color:#b0b0b0;">2°</span><span style="font-size:1rem;">💪</span>
+          <div class="r-inf"><div class="r-nm">2° Bach. "B"</div><div class="r-bar"><div class="r-bar-f" style="width:86%"></div></div></div>
+          <div class="r-pc"><span class="r-pts">4.150</span><span class="r-dt">↑ +180 hoy</span></div>
+        </div>
+        <div class="r-row">
+          <span class="r-pos" style="color:var(--t);">3°</span><span style="font-size:1rem;">🌱</span>
+          <div class="r-inf"><div class="r-nm">1° Bach. "A"</div><div class="r-bar"><div class="r-bar-f" style="width:81%"></div></div></div>
+          <div class="r-pc"><span class="r-pts">3.900</span><span class="r-dt">↑ +90 hoy</span></div>
+        </div>
+        <div class="r-row">
+          <span class="r-pos" style="color:var(--mu);">4°</span><span style="font-size:1rem;">🌿</span>
+          <div class="r-inf"><div class="r-nm">3° Bach. "B"</div><div class="r-bar"><div class="r-bar-f" style="width:67%"></div></div></div>
+          <div class="r-pc"><span class="r-pts">3.210</span><span class="r-dt" style="color:var(--mu);">= sin cambios</span></div>
+        </div>
+        <div class="r-row">
+          <span class="r-pos" style="color:var(--mu);">5°</span><span style="font-size:1rem;">🌾</span>
+          <div class="r-inf"><div class="r-nm">2° Bach. "A"</div><div class="r-bar"><div class="r-bar-f" style="width:60%"></div></div></div>
+          <div class="r-pc"><span class="r-pts">2.870</span><span class="r-dt">↑ +50 hoy</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="bnav">
+      <div class="ni"    onclick="go('home')"><span class="ni-i">🏠</span><span class="ni-l">Inicio</span></div>
+      <div class="ni"    onclick="go('scanner')"><span class="ni-i">📸</span><span class="ni-l">Escanear</span></div>
+      <div class="ni"    onclick="go('muro')"><span class="ni-i">📋</span><span class="ni-l">Muro</span></div>
+      <div class="ni on" onclick="go('ranking')"><span class="ni-i">🏆</span><span class="ni-l">Ranking</span></div>
+      <div class="ni"    onclick="go('perfil')"><span class="ni-i">👤</span><span class="ni-l">Perfil</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ PERFIL ═══════════ -->
+  <div class="scr" id="s-perfil">
+    <div class="bod">
+      <div class="pf-hd">
+        <div class="pf-av" id="pf-av">🦅</div>
+        <div class="pf-nm" id="pf-nm">—</div>
+        <div class="pf-em" id="pf-em">—</div>
+        <div class="pf-lv">🌱 Nivel 2 · Brote</div>
+      </div>
+      <div class="pf-st">
+        <div class="ps"><span class="ps-n" id="pf-xp">820</span><span class="ps-l">XP Total</span></div>
+        <div class="ps"><span class="ps-n">14</span><span class="ps-l">Días activos</span></div>
+        <div class="ps"><span class="ps-n">7°</span><span class="ps-l">Ranking</span></div>
+      </div>
+      <div class="bg-sec">
+        <div class="bg-ttl">🏅 Insignias</div>
+        <div class="bg-row">
+          <div class="bc"><span class="be">♻️</span><span class="bl">Reciclador</span></div>
+          <div class="bc"><span class="be">🌱</span><span class="bl">Semilla</span></div>
+          <div class="bc"><span class="be">📸</span><span class="bl">Fotógrafo</span></div>
+          <div class="bc"><span class="be">🔥</span><span class="bl">Racha 7d</span></div>
+          <div class="bc lk"><span class="be">💡</span><span class="bl">Energía</span></div>
+          <div class="bc lk"><span class="be">🦅</span><span class="bl">Cóndor</span></div>
+          <div class="bc lk"><span class="be">🏆</span><span class="bl">Campeón</span></div>
+        </div>
+      </div>
+      <div class="im-sec">
+        <div class="im-ttl">🌍 Mi Impacto Real</div>
+        <div class="im-row"><span style="font-size:1.3rem;">♻️</span><div><div class="im-v" id="im-rec">47 objetos</div><div class="im-l">Clasificados con IA</div></div></div>
+        <div class="im-row"><span style="font-size:1.3rem;">🌳</span><div><div class="im-v">3 árboles</div><div class="im-l">Plantados y en AR</div></div></div>
+        <div class="im-row"><span style="font-size:1.3rem;">💧</span><div><div class="im-v">480 litros</div><div class="im-l">Agua ahorrada</div></div></div>
+        <div class="im-row"><span style="font-size:1.3rem;">☁️</span><div><div class="im-v">2.4 kg CO₂</div><div class="im-l">Capturado por mis árboles</div></div></div>
+      </div>
+      <button class="out-btn" onclick="logout()">🚪 Cerrar sesión</button>
+    </div>
+    <div class="bnav">
+      <div class="ni"    onclick="go('home')"><span class="ni-i">🏠</span><span class="ni-l">Inicio</span></div>
+      <div class="ni"    onclick="go('scanner')"><span class="ni-i">📸</span><span class="ni-l">Escanear</span></div>
+      <div class="ni"    onclick="go('muro')"><span class="ni-i">📋</span><span class="ni-l">Muro</span></div>
+      <div class="ni"    onclick="go('ranking')"><span class="ni-i">🏆</span><span class="ni-l">Ranking</span></div>
+      <div class="ni on" onclick="go('perfil')"><span class="ni-i">👤</span><span class="ni-l">Perfil</span></div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+</div><!-- /wrap -->
+
+<script>
+'use strict';
+
+/* ═══ STATE ═══ */
+var appUser  = null;
+var camStream = null;
+var camFace  = 'environment';
+var xpTotal  = 820;
+var scanN    = 0;
+var toastTmr = null;
+
+/* ═══ CLOCK ═══ */
+function tick() {
+  var d = new Date();
+  var h = String(d.getHours()).padStart(2,'0');
+  var m = String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m;
+}
+tick();
+setInterval(tick, 15000);
+
+/* ═══ NAVIGATION ═══ */
+function go(id) {
+  if (id !== 'scanner' && camStream) stopCam(false);
+  document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on'); });
+  document.getElementById('s-' + id).classList.add('on');
+  document.querySelectorAll('.sb').forEach(function(b){ b.classList.remove('on'); });
+  var sb = document.getElementById('sb-' + id);
+  if (sb) sb.classList.add('on');
+  if (id === 'home') {
+    setTimeout(function(){
+      document.getElementById('xp-fill').style.width = Math.min((xpTotal/1500)*100, 100) + '%';
+    }, 200);
+  }
+}
+
+/* ═══ TOAST ═══ */
+function showToast(msg, pts, ico) {
+  document.getElementById('t-i').textContent = ico || '⚡';
+  document.getElementById('t-m').textContent = msg;
+  document.getElementById('t-x').textContent = pts;
+  var el = document.getElementById('toast');
+  el.classList.add('on');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(function(){ el.classList.remove('on'); }, 3000);
+}
+
+/* ═══ XP ═══ */
+function addXP(n) {
+  xpTotal += n;
+  document.getElementById('xp-lb').textContent = xpTotal + ' / 1.500 XP';
+  document.getElementById('xp-fill').style.width = Math.min((xpTotal/1500)*100, 100) + '%';
+  document.getElementById('pf-xp').textContent = xpTotal;
+}
+
+/* ═══ FORM LOGIN ═══ */
+function checkForm() {
+  var nombre = (document.getElementById('inp-nombre').value || '').trim();
+  var curso  = (document.getElementById('inp-curso').value  || '').trim();
+  var inst   = (document.getElementById('inp-inst').value   || '').trim();
+  var btn    = document.getElementById('btn-ingresar');
+  var ok     = nombre.length >= 2 && curso !== '' && inst.length >= 2;
+  btn.disabled   = !ok;
+  btn.style.opacity = ok ? '1' : '.45';
+}
+
+function formLogin() {
+  var nombre = (document.getElementById('inp-nombre').value || '').trim();
+  var curso  = (document.getElementById('inp-curso').value  || '').trim();
+  var inst   = (document.getElementById('inp-inst').value   || '').trim();
+  var err    = document.getElementById('form-err');
+  if (nombre.length < 2) { err.textContent='⚠️ Ingresa tu nombre completo.'; err.style.display='block'; return; }
+  if (!curso)             { err.textContent='⚠️ Selecciona tu curso.';        err.style.display='block'; return; }
+  if (inst.length < 2)   { err.textContent='⚠️ Ingresa el nombre de tu institución.'; err.style.display='block'; return; }
+  err.style.display = 'none';
+  localStorage.setItem('eq_user', JSON.stringify({ name: nombre, curso: curso, inst: inst }));
+  setUser({ name: nombre, curso: curso, inst: inst });
+}
+
+function setUser(u) {
+  appUser = u;
+  var fn = u.name.split(' ')[0];
+  var h  = new Date().getHours();
+  var gr = h < 12 ? 'Buenos días 🌿' : h < 18 ? 'Buenas tardes 🌿' : 'Buenas noches 🌿';
+  var ini = fn[0].toUpperCase();
+
+  document.getElementById('h-gr').textContent = gr;
+  document.getElementById('h-nm').textContent = u.name;
+  var hav = document.getElementById('h-av');
+  hav.textContent = ini;
+  hav.style.fontSize = '1.1rem';
+  hav.style.fontWeight = '700';
+
+  document.getElementById('pf-nm').textContent = u.name;
+  document.getElementById('pf-em').textContent = (u.curso || '') + ' · ' + (u.inst || '');
+  var pav = document.getElementById('pf-av');
+  pav.textContent = ini;
+  pav.style.fontSize = '1.4rem';
+  pav.style.fontWeight = '700';
+
+  document.getElementById('m-inp').placeholder = 'Comparte tu acción, ' + fn + '...';
+  go('home');
+  showToast('¡Bienvenid@, ' + fn + '! 🦅', u.curso + ' · ' + u.inst, '🌱');
+}
+
+function logout() {
+  if (camStream) stopCam(false);
+  appUser = null;
+  localStorage.removeItem('eq_user');
+  document.getElementById('h-nm').textContent = 'Cargando...';
+  document.getElementById('h-av').textContent = '🦅';
+  document.getElementById('inp-nombre').value = '';
+  document.getElementById('inp-curso').value  = '';
+  document.getElementById('inp-inst').value   = '';
+  checkForm();
+  go('splash');
+  showToast('Sesión cerrada', '¡Hasta pronto!', '👋');
+}
+
+// Auto-login si ya hay sesión guardada
+(function(){
+  try {
+    var saved = localStorage.getItem('eq_user');
+    if (saved) { var u = JSON.parse(saved); if (u && u.name && u.curso && u.inst) setUser(u); }
+  } catch(e) {}
+})();
+
+/* ═══ CAMERA ═══ */
+async function startCam() {
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camFace, width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    camStream = stream;
+    var vid = document.getElementById('cam-vid');
+    vid.srcObject = stream;
+    await vid.play();
+    document.getElementById('cam-off').style.display  = 'none';
+    document.getElementById('cam-ov').style.display   = 'flex';
+    document.getElementById('cam-ctrl').style.display = 'flex';
+    setDot('rdy');
+    setST('📸 Cámara activa · Apunta al residuo y toca "Analizar con IA"');
+    showToast('Cámara activada ✅','Apunta a un residuo','📸');
+  } catch(err) {
+    var msg = 'No se pudo acceder a la cámara.';
+    if (err.name === 'NotAllowedError')   msg = 'Permiso denegado. Permite la cámara en el navegador.';
+    if (err.name === 'NotFoundError')     msg = 'No se encontró cámara en este dispositivo.';
+    if (err.name === 'NotSupportedError') msg = 'Requiere HTTPS para acceder a la cámara.';
+    document.getElementById('cam-off-txt').textContent = msg;
+    showToast('⚠️ ' + msg.slice(0,38), 'Usa el Demo abajo', '❌');
+  }
+}
+
+function stopCam(showOff) {
+  if (camStream) { camStream.getTracks().forEach(function(t){ t.stop(); }); camStream = null; }
+  var vid = document.getElementById('cam-vid');
+  vid.srcObject = null;
+  if (showOff) {
+    document.getElementById('cam-off').style.display  = 'flex';
+    document.getElementById('cam-ov').style.display   = 'none';
+    document.getElementById('cam-ctrl').style.display = 'none';
+    document.getElementById('cam-off-txt').textContent = 'Activa la cámara para escanear residuos con IA en tiempo real';
+    setDot(''); setST('Listo · Activa la cámara o toca un objeto demo');
+  }
+}
+
+async function flipCam() {
+  camFace = camFace === 'environment' ? 'user' : 'environment';
+  stopCam(false);
+  await startCam();
+  showToast('Cámara volteada', camFace === 'user' ? 'Frontal' : 'Trasera', '🔄');
+}
+
+async function analyzeFrame() {
+  if (!camStream) { showToast('Activa la cámara primero','📸','⚠️'); return; }
+  var btn = document.getElementById('an-btn');
+  btn.disabled = true;
+  setDot('bsy'); setST('🤖 Analizando imagen con IA...');
+  try {
+    var vid = document.getElementById('cam-vid');
+    var cvs = document.getElementById('cam-cvs');
+    cvs.width  = vid.videoWidth  || 640;
+    cvs.height = vid.videoHeight || 480;
+    cvs.getContext('2d').drawImage(vid, 0, 0);
+    var b64 = cvs.toDataURL('image/jpeg', 0.75).split(',')[1];
+
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+            { type: 'text', text: 'Eres clasificador de residuos para app educativa en Ecuador. Analiza la imagen. Responde SOLO JSON sin backticks:\n{"tipo":"nombre","categoria":"Plástico|Orgánico|Papel|Vidrio|Metal|Electrónico|Peligroso|Otro","instruccion":"dónde depositar brevemente","xp":50,"confianza":95}' }
+          ]
+        }]
+      })
+    });
+
+    var data = await resp.json();
+    var raw  = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
+    var m    = raw.match(/\{[\s\S]*?\}/);
+    if (!m) throw new Error('no-json');
+    var r = JSON.parse(m[0]);
+    showResult(r.tipo, r.categoria, r.instruccion, r.xp, r.confianza);
+    setDot('rdy'); setST('✅ Análisis listo · Apunta a otro residuo');
+  } catch(e) {
+    var opts = [
+      {tipo:'Botella PET',    cat:'Plástico', instr:'♻️ Contenedor Azul · Vacía el líquido', xp:50, conf:88},
+      {tipo:'Residuo Orgánico',cat:'Orgánico',instr:'🟤 Contenedor Café · Para compostaje',  xp:50, conf:84},
+      {tipo:'Papel / Cartón', cat:'Papel',    instr:'♻️ Contenedor Gris · Debe estar seco',  xp:50, conf:90}
+    ];
+    var fb = opts[Math.floor(Math.random()*opts.length)];
+    showResult(fb.tipo, fb.cat, fb.instr, fb.xp, fb.conf);
+    setDot('rdy'); setST('⚠️ Sin conexión · Resultado estimado');
+  }
+  btn.disabled = false;
+}
+
+function showResult(tipo, cat, instr, pts, conf) {
+  document.getElementById('ai-cf').textContent  = conf + '% precisión';
+  document.getElementById('ai-nm').textContent  = tipo + ' · ' + cat;
+  document.getElementById('ai-in').textContent  = instr;
+  document.getElementById('ai-xp').textContent  = '⚡ +' + pts + ' XP ganados';
+  var box = document.getElementById('ai-box');
+  box.classList.remove('on');
+  void box.offsetWidth;
+  box.classList.add('on');
+  addXP(pts);
+  scanN++;
+  document.getElementById('s-rec').textContent = 12 + scanN;
+  var ir = document.getElementById('im-rec');
+  if (ir) ir.textContent = (47 + scanN) + ' objetos';
+  showToast('🤖 IA detectó: ' + tipo, '+' + pts + ' XP', '♻️');
+}
+
+function setDot(cls) {
+  var d = document.getElementById('ai-dot');
+  d.className = 'ai-dot';
+  if (cls) d.classList.add(cls);
+}
+function setST(t) { document.getElementById('ai-st-txt').textContent = t; }
+
+/* ═══ DEMO SCAN ═══ */
+function demoScan(el, name, cat, instr, color, pts) {
+  document.querySelectorAll('.db').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  setDot('bsy'); setST('🤖 Simulando análisis de IA...');
+  setTimeout(function(){
+    document.getElementById('ai-in').style.color = color;
+    showResult(name, cat, instr, pts, (Math.random()*6+92).toFixed(1));
+    setDot('rdy'); setST('✅ Clasificado · Toca otro para continuar');
+  }, 650);
+}
+
+/* ═══ MURO ═══ */
+function likePost(btn) {
+  btn.classList.toggle('lk');
+  var sp = btn.querySelector('span');
+  var n  = parseInt(sp.textContent, 10);
+  sp.textContent = btn.classList.contains('lk') ? n + 1 : n - 1;
+}
+
+function addPost() {
+  var inp  = document.getElementById('m-inp');
+  var text = inp.value.trim();
+  if (!text) return;
+  var nm  = appUser ? appUser.name : 'Estudiante';
+  var pic = appUser && appUser.picture;
+  var div = document.createElement('div');
+  div.className = 'post';
+  div.style.animation = 'sup .3s ease';
+  var avH = pic
+    ? '<div class="p-av" style="border-color:var(--gn);"><img src="' + pic + '" alt="av" onerror="this.parentNode.textContent=\'🦅\'"></div>'
+    : '<div class="p-av" style="background:linear-gradient(135deg,#1db954,#0d9ddb);border-color:#1db954;">🦅</div>';
+  div.innerHTML =
+    '<div class="p-ur">' + avH +
+    '<div><div class="p-nm">' + nm + '</div><div class="p-cs">3° Bach. &quot;A&quot;</div></div>' +
+    '<span class="p-tm">ahora</span></div>' +
+    '<div class="p-tx">' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;') + ' 🌿</div>' +
+    '<div class="p-ac"><button class="p-btn" onclick="likePost(this)">🌿 <span>0</span></button>' +
+    '<button class="p-btn">💬 <span>0</span></button><span class="p-xp">+15 XP</span></div>';
+  document.getElementById('posts').prepend(div);
+  inp.value = '';
+  addXP(15);
+  showToast('✅ Publicado en el Muro', '+15 XP', '📋');
+}
+
+/* ═══ INIT ═══ */
+(function(){
+  document.getElementById('ai-cf').textContent = '97.3% precisión';
+  document.getElementById('ai-nm').textContent = 'Botella PET · Plástico';
+  document.getElementById('ai-in').textContent = '♻️ Contenedor Azul · Vacía el líquido antes de reciclar';
+  document.getElementById('ai-xp').textContent = '⚡ +50 XP ganados';
+  document.getElementById('ai-box').classList.add('on');
+})();
+</script>
+</body>
+</html>
